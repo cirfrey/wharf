@@ -14,21 +14,25 @@ auto wharf::boat::load(std::string_view path) -> bool
 auto wharf::boat::take_ownership_of(wharf::cargo& lib) -> bool
 {
     // We need to figure out the handle given a pointer to inside
-    // of the dynamically loaded library.
-    // Luckly for us, in glibc the handle is the actual linkmap.
-    /// TODO: what about other libc implemetations ?
-    Dl_info info;
-    link_map* handle;
+    // of the dynamically loaded library, for that we are going to
+    // use dladdr1() using that pointer to get the link map, and then
+    // dlopen() the object again to get the handle.
+
+    auto dummy_info = Dl_info{};
+    link_map* link_map = nullptr;
     dladdr1(
         &lib,
-        &info,
-        reinterpret_cast<void**>(&handle),
+        &dummy_info,
+        reinterpret_cast<void**>(&link_map),
         RTLD_DL_LINKMAP);
 
-    /// TODO: maybe check if cargo is already loaded ?
+    // dlopen() also increases the object's refcount (when it reaches 0
+    // the shared object is freed), which is what we want since we want
+    // to own it aswell.
+    auto handle = dlopen(link_map->l_name, RTLD_NOW | RTLD_NOLOAD);
+    /// TODO: What if handle == nullptr ?
 
-    // Increase the refcount since we are now owners of this aswell.
-    dlopen(handle->l_name, RTLD_NOW | RTLD_NOLOAD);
+    /// TODO: Maybe check if cargo is already loaded ?
 
     libs.emplace_back( handle, [](auto h){ dlclose(h); } );
     return true;
