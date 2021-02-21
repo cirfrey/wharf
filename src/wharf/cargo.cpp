@@ -4,7 +4,7 @@
 
 wharf::cargo::cargo(const char* name)
     : cargo_name{ name }
-    , is_boated{ wharf::vessel().take_owership_of(this) }
+    , is_boated{ wharf::vessel().cargo_bay().take_ownership_of(*this) }
 {}
 
 // Just returns a dummy implementation in case it's not being

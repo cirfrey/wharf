@@ -11,7 +11,7 @@ auto wharf::boat::load(std::string_view path) -> bool
     return handle != nullptr;
 }
 
-auto wharf::boat::take_owership_of(void* lib) -> bool
+auto wharf::boat::take_ownership_of(wharf::cargo& lib) -> bool
 {
     // We need to figure out the handle given a pointer to inside
     // of the dynamically loaded library.
@@ -20,7 +20,7 @@ auto wharf::boat::take_owership_of(void* lib) -> bool
     Dl_info info;
     link_map* handle;
     dladdr1(
-        lib,
+        &lib,
         &info,
         reinterpret_cast<void**>(&handle),
         RTLD_DL_LINKMAP);

@@ -12,10 +12,13 @@ namespace wharf {
     public:
         using lib_handle = std::unique_ptr<void, void(*)(void*)>;
 
-        auto load(std::string_view path) -> bool override;
-        auto take_owership_of(void* lib) -> bool override;
-
+        boat() = default;
         virtual ~boat() = default;
+
+        virtual auto load(std::string_view path) -> bool override;
+
+    protected:
+        virtual auto take_ownership_of(wharf::cargo& lib) -> bool override;
 
         std::vector<lib_handle> libs;
     };
