@@ -1,6 +1,8 @@
 #include "wharf/vessels/boat.hpp"
 
-#include <dlfcn.h> // For dlopen and friends
+#include "wharf/cargo.hpp"
+
+#include <dlfcn.h> // For dlopen and friends.
 #include <link.h>  // For struct Dl_info and struct link_map.
 
 auto wharf::boat::load(std::string_view path) -> bool
@@ -11,7 +13,16 @@ auto wharf::boat::load(std::string_view path) -> bool
     return handle != nullptr;
 }
 
-auto wharf::boat::take_ownership_of(wharf::cargo& lib) -> bool
+auto wharf::boat::unload(std::string_view libname) -> bool
+{
+    auto it = libs.find(libname.data());
+    if(it == libs.end()) { return false; }
+
+    libs.erase(it);
+    return true;
+}
+
+auto wharf::boat::take_ownership_of(wharf::cargo& cargo) -> bool
 {
     // We need to figure out the handle given a pointer to inside
     // of the dynamically loaded library, for that we are going to
@@ -21,19 +32,28 @@ auto wharf::boat::take_ownership_of(wharf::cargo& lib) -> bool
     auto dummy_info = Dl_info{};
     link_map* link_map = nullptr;
     dladdr1(
-        &lib,
+        &cargo,
         &dummy_info,
         reinterpret_cast<void**>(&link_map),
         RTLD_DL_LINKMAP);
 
     // dlopen() also increases the object's refcount (when it reaches 0
-    // the shared object is freed), which is what we want since we want
+    // the shared object is deallocated), which is what we want since we want
     // to own it aswell.
     auto handle = dlopen(link_map->l_name, RTLD_NOW | RTLD_NOLOAD);
     /// TODO: What if handle == nullptr ?
 
-    /// TODO: Maybe check if cargo is already loaded ?
+    // We create the lib before trying to insert to make sure it's cleaned
+    // up if there already exists a lib with the same name.
+    auto lib = boat::lib{cargo, handle};
 
-    libs.emplace_back( handle, [](auto h){ dlclose(h); } );
+    if( libs.count(cargo.cargo_name) ) { return false; }
+
+    libs.emplace( cargo.cargo_name, std::move(lib) );
     return true;
 }
+
+wharf::boat::lib::lib(wharf::cargo& c, void* h)
+    : cargo{ &c }
+    , handle{ h, &dlclose }
+{}

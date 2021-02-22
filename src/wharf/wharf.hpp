@@ -23,6 +23,10 @@ namespace wharf
          * unloaded, mainly by calling cargo_bay.take_ownership_of(this) (done by wharf::cargo::cargo()).
          */
         virtual auto load(std::string_view path) -> bool;
+        /*
+         * Unloads a dynamic library for good.
+         */
+        virtual auto unload(std::string_view libname) -> bool;
 
         /*
          * Cargo facing interface.
