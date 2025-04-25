@@ -17,7 +17,7 @@ namespace wharf {
         virtual ~boat() = default;
 
         virtual auto load(std::string_view path) -> bool override;
-        virtual auto unload(std::string_view libname) -> bool override;
+        virtual auto unload(std::string_view path) -> bool override;
 
     protected:
         virtual auto take_ownership_of(wharf::cargo& lib) -> bool override;

@@ -24,7 +24,7 @@ cargo_sources = files(
 )
 
 host_lib = library('wharf_host', include_directories: incdir, dependencies: host_dependencies, sources: wharf_sources + host_sources)
-host_dep = declare_dependency(   include_directories: incdir, dependencies: host_dependencies, link_with: host_lib)
+host_dep = declare_dependency(   include_directories: incdir, dependencies: host_dependencies, link_with: host_lib, link_args: '-rdynamic')
 
 cargo_lib = library('wharf_cargo', include_directories: incdir, sources: wharf_sources + cargo_sources)
 cargo_dep = declare_dependency(    include_directories: incdir, link_with: cargo_lib)

@@ -7,15 +7,17 @@
 
 auto wharf::boat::load(std::string_view path) -> bool
 {
+    unload(path);
+
     auto handle = dlopen(path.data(), RTLD_NOW | RTLD_LOCAL);
     if (handle) { dlclose(handle); }
 
     return handle != nullptr;
 }
 
-auto wharf::boat::unload(std::string_view libname) -> bool
+auto wharf::boat::unload(std::string_view path) -> bool
 {
-    auto it = libs.find(libname.data());
+    auto it = libs.find(path.data());
     if(it == libs.end()) { return false; }
 
     libs.erase(it);
@@ -44,12 +46,12 @@ auto wharf::boat::take_ownership_of(wharf::cargo& cargo) -> bool
     /// TODO: What if handle == nullptr ?
 
     // We create the lib before trying to insert to make sure it's cleaned
-    // up if there already exists a lib with the same name.
+    // up properly if there already exists a lib with the same name.
     auto lib = boat::lib{cargo, handle};
 
-    if( libs.count(cargo.cargo_name) ) { return false; }
+    if( libs.count(link_map->l_name) ) { return false; }
 
-    libs.emplace( cargo.cargo_name, std::move(lib) );
+    libs.emplace( link_map->l_name, std::move(lib) );
     return true;
 }
 
