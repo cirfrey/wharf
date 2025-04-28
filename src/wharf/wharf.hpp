@@ -29,6 +29,11 @@ namespace wharf
         virtual auto unload(std::string_view libname) -> bool;
 
         /*
+         * Calls cargo.on_ready() for all cargos which are not already ready.
+        */
+        virtual auto ready_unreadied_libs() -> void;
+
+        /*
          * Cargo facing interface.
          */
         struct cargo_bay_proxy;

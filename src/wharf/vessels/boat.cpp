@@ -55,7 +55,14 @@ auto wharf::boat::take_ownership_of(wharf::cargo& cargo) -> bool
     return true;
 }
 
+auto wharf::boat::ready_unreadied_libs() -> void
+{
+    for(auto const& lib : libs)
+        if(!lib.second.cargo->has_been_readied())
+            lib.second.cargo->on_ready();
+}
+
 wharf::boat::lib::lib(wharf::cargo& c, void* h)
     : cargo{ &c }
-    , handle{ h, &dlclose }
+    , handle{ h, [](void* p){ if(p) dlclose(p); } }
 {}

@@ -23,10 +23,8 @@ cargo_sources = files(
     'src/wharf/cargo.cpp',
 )
 
-host_lib = library('wharf_host', include_directories: incdir, dependencies: host_dependencies, sources: wharf_sources + host_sources)
-host_dep = declare_dependency(   include_directories: incdir, dependencies: host_dependencies, link_with: host_lib, link_args: '-rdynamic')
-
 cargo_lib = library('wharf_cargo', include_directories: incdir, sources: wharf_sources + cargo_sources)
 cargo_dep = declare_dependency(    include_directories: incdir, link_with: cargo_lib)
 
-subdir('tests')
+host_lib = library('wharf_host', include_directories: incdir, dependencies: host_dependencies + cargo_dep, sources: wharf_sources + host_sources)
+host_dep = declare_dependency(   include_directories: incdir, dependencies: host_dependencies, link_with: host_lib, link_args: ['-rdynamic', '-Wl,--disable-new-dtags'])

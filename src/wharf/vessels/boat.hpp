@@ -18,6 +18,7 @@ namespace wharf {
 
         virtual auto load(std::string_view path) -> bool override;
         virtual auto unload(std::string_view path) -> bool override;
+        virtual auto ready_unreadied_libs() -> void override;
 
     protected:
         virtual auto take_ownership_of(wharf::cargo& lib) -> bool override;
@@ -26,12 +27,12 @@ namespace wharf {
     };
 
     struct boat::lib {
-        using handle_t = std::unique_ptr<void, int (*)(void*)>;
+        using handle_t = std::unique_ptr<void, void (*)(void*)>;
 
         lib(wharf::cargo& cargo, void* handle);
         lib(lib&&)                    = default;
         auto operator=(lib&&) -> lib& = default;
-        virtual ~lib() noexcept       = default;
+        virtual ~lib() noexcept = default;
 
         // Make it move-only.
         lib(const lib&)                    = delete;

@@ -10,44 +10,25 @@ namespace wharf
     class cargo
     {
     public:
-        template <
-            typename Func1 = std::function<void(void)>,
-            typename Func2 = std::function<void(void)>
-        >
-        cargo(const char* name, Func1&& on_init = []{}, Func2&& on_deinit = []{});
-        virtual ~cargo();
+        using callback = void(*)(cargo&);
 
-        const char* const cargo_name;
-        const bool is_boated;
+        cargo(const char* name, callback on_ready = [](auto){});
+        virtual ~cargo() = default;
+
+        auto name() const -> const char* { return cargo_name; }
+        auto is_boated() const -> bool { return cargo_is_boated; }
+        auto has_been_readied() const -> bool { return cargo_has_been_readied; }
+
+        // The vessel calls this some indeterminate amount of
+        // time after the library is loaded/created, this means
+        // it can actually do work now.
+        virtual auto on_ready() -> void;
 
     private:
-        std::function<void(void)> on_destruction;
-    };
-}
+        callback on_ready_f;
 
-template< typename Func1, typename Func2 >
-wharf::cargo::cargo(const char* name, Func1&& on_init, Func2&& on_deinit)
-    : cargo_name{ name }
-    , is_boated{ wharf::vessel().cargo_bay().take_ownership_of(*this) }
-    , on_destruction{
-        [on_deinit = std::forward<Func2>(on_deinit), this]{
-            if constexpr( std::is_invocable_v<Func2, wharf::cargo&>) {
-                on_deinit(*this);
-            } else {
-                on_deinit();
-            }
-        }
-    }
-{
-    /// TODO: Defer this call to when the function returns somehow, just
-    // in case someone tries to wharf::vessel().unload(cargo.cargo_name)
-    // or something equally weird inside on_init().
-    if(is_boated)
-    {
-        if constexpr( std::is_invocable_v<Func1, wharf::cargo&> ) {
-            on_init(*this);
-        } else {
-            on_init();
-        }
-    }
+        const char* cargo_name;
+        bool cargo_is_boated;
+        bool cargo_has_been_readied = false;
+    };
 }
